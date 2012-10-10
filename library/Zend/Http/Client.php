@@ -628,7 +628,7 @@ class Client implements Stdlib\DispatchableInterface
      * @throws Exception\InvalidArgumentException
      * @return Client
      */
-    public function setAuth($user, $password, $type = self::AUTH_BASIC)
+    public function setAuth($user, $password, $type = self::AUTH_BASIC, $nc = NULL, $cnonce = NULL)
     {
         if (!defined('self::AUTH_' . strtoupper($type))) {
             throw new Exception\InvalidArgumentException("Invalid or not supported authentication type: '$type'");
@@ -640,8 +640,9 @@ class Client implements Stdlib\DispatchableInterface
         $this->auth = array (
             'user'     => $user,
             'password' => $password,
-            'type'     => $type
-
+            'type'     => $type,
+            'nc'       => $nc,
+            'cnonce'   => $cnonce,
         );
 
         return $this;
