@@ -683,20 +683,28 @@ class Client implements Stdlib\DispatchableInterface
                         throw new Exception\InvalidArgumentException("Invalid or not supported digest authentication parameter: '$key'");
                     }
                 }
+
+                $response = 'username="%s", realm="%s", nonce="%s", uri="%s", response="%s", algorithm=%s';
+                $uri = $this->getUri()->toString();
+                $hexNonceCount = sprintf('%08x',$digest['nc']);
+
                 $ha1 = md5($user . ':' . $digest['realm'] . ':' . $password);
                 if (empty($digest['qop']) || strtolower($digest['qop']) == 'auth') {
-                    $ha2 = md5($this->getMethod() . ':' . $this->getUri()->getPath());
+                    $ha2 = md5($this->getMethod() . ':' . $uri);
                 } elseif (strtolower($digest['qop']) == 'auth-int') {
                      if (empty($entityBody)) {
                         throw new Exception\InvalidArgumentException("I cannot use the auth-int digest authentication without the entity body");
                      }
-                     $ha2 = md5($this->getMethod() . ':' . $this->getUri()->getPath() . ':' . md5($entityBody));
+                     $ha2 = md5($this->getMethod() . ':' . $uri . ':' . md5($entityBody));
                 }
                 if (empty($digest['qop'])) {
-                    $response = md5($ha1 . ':' . $digest['nonce'] . ':' . $ha2);
+                    $digestResponse = md5($ha1 . ':' . $digest['nonce'] . ':' . $ha2);
+                    return sprintf($response, $user, $digest['realm'], $digest['nonce'], $uri, $digestResponse, $digest['algorithm']);
                 } else {
-                    $response = md5($ha1 . ':' . $digest['nonce'] . ':' . $digest['nc']
-                                    . ':' . $digest['cnonce'] . ':' . $digest['qoc'] . ':' . $ha2);
+                    $response .= ', cnonce="%s", qop=%s, nc=%s';
+                    $digestResponse = md5($ha1 . ':' . $digest['nonce'] . ':' . $hexNonceCount 
+                                    . ':' . $digest['cnonce'] . ':' . $digest['qop'] . ':' . $ha2);
+                    return sprintf($response, $user, $digest['realm'], $digest['nonce'], $uri, $digestResponse, $digest['algorithm'], $digest['cnonce'], $digest['qop'], $hexNonceCount);
                 }
                 break;
         }
@@ -1067,7 +1075,7 @@ class Client implements Stdlib\DispatchableInterface
                     }
                     break;
                 case self::AUTH_DIGEST :
-                    throw new Exception\RuntimeException("The digest authentication is not implemented yet");
+                    break;
             }
         }
 
