@@ -914,7 +914,36 @@ class Client implements Stdlib\DispatchableInterface
                     }
                 }
                 ++$this->redirectCounter;
+            }
+            // If we're using Digest HTTP authentication, the response was a 401 (Not Authorized)
+            // and we haven't already sent  an Authorization header...
+            elseif ( isset($this->auth['type']) && $this->auth['type'] == self::AUTH_DIGEST
+                      && $response->getStatusCode() == Response::STATUS_CODE_401 
+                      && $this->request->getHeader('Authorization') === false) {
 
+                // Pull the WWW-Authenticate header sent by the server
+                $wwwAuthenticate = $response->getHeaders()->get('WWW-Authenticate');
+                if ($wwwAuthenticate !== false) {
+                    $digest = $wwwAuthenticate->current();
+
+                    // Calculate the appropriate Authorization digest
+                    $auth = $this->calcAuthDigest($this->auth['user'], $this->auth['password'], $this->auth['type'], array(
+                        'realm'     => $digest->getRealm(),
+                        'nonce'     => $digest->getNonce(),
+                        'qop'       => $digest->getQop(),
+                        'opaque'    => $digest->getOpaque(),
+                        'nc'        => dechex(++$this->auth['nc']),
+                        'cnonce'    => $this->auth['cnonce'],
+                        'algorithm' => $digest->getAlgorithm(),
+                    ));
+                    if ($auth !== false) {
+                        // Add an "Authorization: Digest <digest>" header
+                        $this->request->getHeaders()->addHeaders(array('Authorization' => 'Digest ' . $auth));
+                        continue;
+                    }
+                }
+                break;
+                
             } else {
                 // If we didn't get any location, stop redirecting
                 break;
