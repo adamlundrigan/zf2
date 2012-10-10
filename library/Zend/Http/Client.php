@@ -40,12 +40,14 @@ class Client implements Stdlib\DispatchableInterface
     /**
      * @const string DIGEST Authentication
      */
-    const DIGEST_REALM  = 'realm';
-    const DIGEST_QOP    = 'qop';
-    const DIGEST_NONCE  = 'nonce';
-    const DIGEST_OPAQUE = 'opaque';
-    const DIGEST_NC     = 'nc';
-    const DIGEST_CNONCE = 'cnonce';
+    const DIGEST_REALM     = 'realm';
+    const DIGEST_QOP       = 'qop';
+    const DIGEST_NONCE     = 'nonce';
+    const DIGEST_ALGORITHM = 'algorithm';
+    const DIGEST_DOMAIN    = 'domain';
+    const DIGEST_CNONCE    = 'cnonce';
+    const DIGEST_NC        = 'nc';
+    const DIGEST_OPAQUE    = 'opaque';
 
     /**
      * @var Response
