@@ -963,10 +963,10 @@ class CollectionTest extends TestCase
         $form->setData(array(
             //@TODO why do I have to provide the market key twice here?
             'market' => array(
-            	'market' => array(
-            	    'shop' => array(
+                'market' => array(
+                    'shop' => array(
                         'products' => array(),
-            	    ),
+                    ),
                 ),
             ),
         ));
