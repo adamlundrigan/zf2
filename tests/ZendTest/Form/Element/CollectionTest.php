@@ -910,6 +910,75 @@ class CollectionTest extends TestCase
         };
     }
 
+    /**
+     * @group GH-4492
+     */
+    public function testCanDeletAllElementsOfACollectionBoundFromAnObject()
+    {
+        $productFieldset = new ProductFieldset();
+        $productFieldset->setHydrator(new ArraySerializable());
+        $productFieldset->setObject(new Product());
+
+        $shopFieldset = new Fieldset('shop');
+        $shopFieldset->setHydrator(new ObjectPropertyHydrator());
+        $shopFieldset->setObject(new stdClass());
+        $shopFieldset->add(array(
+            'name' => 'products',
+            'type' => 'Collection',
+            'options' => array(
+                'target_element' => $productFieldset,
+                'count' => 2,
+            ),
+        ));
+
+        $mainFieldset = new Fieldset('market');
+        $mainFieldset->setUseAsBaseFieldset(true);
+        $mainFieldset->setHydrator(new ObjectPropertyHydrator());
+        $mainFieldset->setObject(new stdClass());
+        $mainFieldset->add($shopFieldset);
+
+        $form = new Form();
+        $form->setHydrator(new ObjectPropertyHydrator());
+        $form->add($mainFieldset);
+
+        $prices = array(100, 200);
+
+        $products[0] = new Product();
+        $products[0]->setPrice($prices[0]);
+        $products[1] = new Product();
+        $products[1]->setPrice($prices[1]);
+
+        $shop = new stdClass();
+        $shop->products = $products;
+
+        $market = new stdClass();
+        $market->shop = $shop;
+
+        $entity = new stdClass();
+        $entity->market = $market;
+
+        $form->bind($entity);
+
+        // Now set the form data, simulating having removed all the products
+        $form->setData(array(
+            //@TODO why do I have to provide the market key twice here?
+            'market' => array(
+            	'market' => array(
+            	    'shop' => array(
+                        'products' => array(),
+            	    ),
+                ),
+            ),
+        ));
+
+        $this->assertTrue($form->isValid(), var_export($form->getMessages(), true));
+
+        // The products collection should now have nothing in it,
+        // because we asked that it all be removed
+        $newData = $form->getData();
+        $this->assertCount(0, $newData->market->shop->products, 'We expected the products collection to be empty, but it was not');
+    }
+
     public function testNestedCollections()
     {
         // @see https://github.com/zendframework/zf2/issues/5640
