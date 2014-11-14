@@ -124,4 +124,15 @@ class CurrencyFormatTest extends \PHPUnit_Framework_TestCase
         $test = str_replace(array("\xC2\xA0", ' '), '', $test);
         $this->assertEquals($expected, $test, $message);
     }
+    
+    /**
+     * @group zf6852
+     */
+    public function testEnsure()
+    {
+        $helper = $this->helper;
+       
+        $result = $helper(100, 'EUR', false, 'en_US');
+        $this->assertEquals('€100', $result);
+    }
 }
